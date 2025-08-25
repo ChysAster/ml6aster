@@ -1,34 +1,152 @@
 openapi: "3.0.0"
 info:
-  title: Greeting application
-  version: 0.0.1
+  title: Greeting + Recipes API
+  version: 0.1.0
 servers:
   - url: /api
-security: 
+security:
   - basic: []
-
 paths:
   /:
     get:
       operationId: app.root
       responses:
         '200':
-          description: "Root response"
-          content:
-            text/plain:
-              schema:
-                type: string
+          description: Root response
   /health:
     get:
       operationId: app.health
-      security: [] 
+      security: []
       responses:
         '204':
           description: OK
+  /recipes:
+    get:
+      operationId: app.list_recipes
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+      security: []
+      responses:
+        '200':
+          description: List of recipes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Recipe'
+    post:
+      operationId: app.create_recipe
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecipeInput'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recipe'
+        '400':
+          description: Bad request
+  /recipes/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: app.get_recipe
+      security: []
+      responses:
+        '200':
+          description: Recipe
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recipe'
+        '404':
+          description: Not found
+    put:
+      operationId: app.update_recipe
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecipeInput'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recipe'
+        '400':
+          description: Bad request
+        '404':
+          description: Not found
+    delete:
+      operationId: app.delete_recipe
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          description: Not found
 
 components:
   securitySchemes:
     basic:
       type: http
       scheme: basic
-      x-basicInfoFunc: app.basic_auth   # <module>.<function>
+      x-basicInfoFunc: app.basic_auth
+  schemas:
+    Recipe:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        ingredients:
+          type: array
+          items:
+            type: string
+        steps:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, title]
+    RecipeInput:
+      type: object
+      properties:
+        title:
+          type: string
+        ingredients:
+          type: array
+          items:
+            type: string
+        steps:
+          type: array
+          items:
+            type: string
+      required: [title]
