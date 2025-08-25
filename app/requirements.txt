@@ -1,0 +1,5 @@
+connexion[flask,swagger-ui]==3.*
+gunicorn==21.*
+Flask>=2.3,<3
+Werkzeug<3
+uvicorn[standard]

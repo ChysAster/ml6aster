@@ -1,0 +1,34 @@
+openapi: "3.0.0"
+info:
+  title: Greeting application
+  version: 0.0.1
+servers:
+  - url: /api
+security: 
+  - basic: []
+
+paths:
+  /:
+    get:
+      operationId: app.root
+      responses:
+        '200':
+          description: "Root response"
+          content:
+            text/plain:
+              schema:
+                type: string
+  /health:
+    get:
+      operationId: app.health
+      security: [] 
+      responses:
+        '204':
+          description: OK
+
+components:
+  securitySchemes:
+    basic:
+      type: http
+      scheme: basic
+      x-basicInfoFunc: app.basic_auth   # <module>.<function>
