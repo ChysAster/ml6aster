@@ -1,7 +1,7 @@
 openapi: "3.0.0"
 info:
-  title: Greeting + Recipes API
-  version: 0.1.0
+  title: Greeting + Recipes API with Search
+  version: 0.2.0
 servers:
   - url: /api
 security:
@@ -61,6 +61,80 @@ paths:
                 $ref: '#/components/schemas/Recipe'
         '400':
           description: Bad request
+  /recipes/search:
+    get:
+      operationId: app.search_recipes
+      parameters:
+        - in: query
+          name: q
+          description: Search query for recipe title, ingredients, or steps
+          schema:
+            type: string
+            default: ""
+        - in: query
+          name: ingredients
+          description: Comma-separated list of ingredients to search for
+          schema:
+            type: string
+            default: ""
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+      security: []
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      allOf:
+                        - $ref: '#/components/schemas/Recipe'
+                        - type: object
+                          properties:
+                            _score:
+                              type: number
+                              description: Relevance score
+                  total:
+                    type: integer
+                    description: Total number of matching recipes
+                  query:
+                    type: string
+                    description: The search query used
+                  ingredients_filter:
+                    type: string
+                    description: The ingredients filter applied
+  /recipes/reindex:
+    post:
+      operationId: app.reindex_all_recipes
+      description: Reindex all recipes in Elasticsearch
+      responses:
+        '200':
+          description: Reindexing completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '500':
+          description: Reindexing failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
   /recipes/{id}:
     parameters:
       - in: path
