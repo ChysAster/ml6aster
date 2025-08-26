@@ -1,19 +1,54 @@
 import connexion
 import logging
 import os
+import json
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from connexion import NoContent
 from google.cloud import firestore
+from google.cloud import secretmanager
 from elasticsearch import Elasticsearch
-import json
 
-PASSWD = {"test": "test"}
+_passwords: Optional[Dict[str, str]] = None
+
+
+def get_passwords() -> Dict[str, str]:
+    """Retrieve passwords from Google Cloud Secret Manager"""
+    global _passwords
+
+    if _passwords is not None:
+        return _passwords
+
+    try:
+        client = secretmanager.SecretManagerServiceClient()
+
+        project_id = os.getenv('GOOGLE_CLOUD_PROJECT')
+        if not project_id:
+            logging.warning(
+                "GOOGLE_CLOUD_PROJECT not set, falling back to hardcoded passwords")
+            _passwords = {"test": "test"} 
+            return _passwords
+
+        secret_name = f"projects/{project_id}/secrets/basic-auth/versions/latest"
+
+        response = client.access_secret_version(request={"name": secret_name})
+
+        secret_value = response.payload.data.decode("UTF-8")
+        _passwords = json.loads(secret_value)
+
+        logging.info("Successfully loaded passwords from Secret Manager")
+        return _passwords
+
+    except Exception as e:
+        logging.error(f"Failed to load passwords from Secret Manager: {e}")
+        _passwords = {"test": "test"}
+        return _passwords
 
 
 def basic_auth(username, password):
-    if PASSWD.get(username) == password:
+    passwords = get_passwords()
+    if passwords.get(username) == password:
         return {"sub": username}
     return None
 
