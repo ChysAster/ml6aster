@@ -5,6 +5,14 @@ import json
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
+# Load environment variables from .env file
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+    logging.info("Loaded environment variables from .env file")
+except ImportError:
+    logging.info("python-dotenv not installed, skipping .env file loading")
+
 from connexion import NoContent
 from google.cloud import firestore
 from google.cloud import secretmanager
@@ -27,8 +35,10 @@ def get_passwords() -> Dict[str, str]:
         if not project_id:
             logging.warning(
                 "GOOGLE_CLOUD_PROJECT not set, falling back to hardcoded passwords")
-            _passwords = {"test": "test"} 
+            _passwords = {"test": "test"}
             return _passwords
+
+        logging.info(f"Using project ID: {project_id}")
 
         secret_name = f"projects/{project_id}/secrets/basic-auth/versions/latest"
 
@@ -46,6 +56,7 @@ def get_passwords() -> Dict[str, str]:
         return _passwords
 
 
+# Rest of your code remains the same...
 def basic_auth(username, password):
     passwords = get_passwords()
     if passwords.get(username) == password:
