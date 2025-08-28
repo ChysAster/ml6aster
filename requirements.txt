@@ -1,0 +1,6 @@
+connexion[flask,swagger-ui]==3.*
+google-cloud-firestore==2.11.1
+google-cloud-secret-manager==2.16.2
+elasticsearch==8.8.2
+python-dateutil==2.8.2
+gunicorn==21.2.0
